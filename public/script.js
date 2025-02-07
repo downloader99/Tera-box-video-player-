@@ -8,75 +8,64 @@ const VIDEO_EXTRACTION_ERROR = "❌ Could not extract video. Try another link.";
 
 // Function to validate TeraBox links
 function isValidTeraBoxLink(url) {
-    return TERA_BOX_REGEX.test(url);
-}
-
-// Function to show alert messages
-function showAlert(message) {
-    alert(message);
-}
-
-// Function to set video player source
-function setVideoPlayerSource(videoUrl) {
-    const videoPlayer = document.getElementById("videoPlayer");
-    videoPlayer.src = videoUrl;
-    videoPlayer.style.display = "block"; // Show the video player
+    const regex = /^https:\/\/(www\.)?(terabox|1024terabox)\.com\/s\/[a-zA-Z0-9_-]+$/;
+    return regex.test(url);
 }
 
 // When the "Play" button is clicked
-document.getElementById("playButton").addEventListener("click", async function () {
+document.getElementById("playButton").addEventListener("click", function () {
     const linkInput = document.getElementById("teraboxLink").value;
 
     // Validate the TeraBox link
     if (!isValidTeraBoxLink(linkInput)) {
-        showAlert(INVALID_LINK_MESSAGE);
+        alert("Invalid TeraBox link! Please enter a correct link.");
         return;
     }
 
     console.log("✅ Valid TeraBox link:", linkInput);
 
-    // Fetch the video
-    try {
-        await fetchVideo(linkInput);
-    } catch (error) {
-        console.error("❌ Error fetching video:", error);
-        showAlert(ERROR_FETCHING_VIDEO_MESSAGE);
-    }
+    // Fetch the video page
+    fetchVideo(linkInput);
 });
 
-// Function to fetch the video page
-async function fetchVideo(link) {
+// Function to fetch the video page using a proxy (to bypass CORS)
+function fetchVideo(link) {
     console.log("🔄 Fetching video for link:", link);
 
-    try {
-        const response = await fetch(link);
-        console.log("✅ Response received:", response);
+    const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(link);
 
-        const html = await response.text();
-        console.log("📜 HTML content fetched.");
+    fetch(proxyUrl)
+        .then(response => response.json())
+        .then(data => {
+            console.log("📜 HTML content fetched.");
 
-        // Check if the page requires login
-        if (LOGIN_REQUIRED_MESSAGES.some(msg => html.includes(msg))) {
-            showAlert(LOGIN_REQUIRED_ALERT);
-            return;
-        }
+            const html = data.contents;
 
-        // Extract video URL (This part may need improvements)
-        const videoUrl = extractVideoUrl(html);
-        if (videoUrl) {
-            console.log("🎬 Extracted Video URL:", videoUrl);
-            setVideoPlayerSource(videoUrl);
-        } else {
-            showAlert(VIDEO_EXTRACTION_ERROR);
-        }
-    } catch (error) {
-        throw new Error(error);
-    }
+            // Check if login is required
+            if (html.includes("Please log in") || html.includes("Sign in to view")) {
+                alert("⚠️ TeraBox requires login to access this file.");
+                return;
+            }
+
+            // Extract video URL
+            const videoUrl = extractVideoUrl(html);
+            if (videoUrl) {
+                console.log("🎬 Extracted Video URL:", videoUrl);
+                document.getElementById("videoPlayer").src = videoUrl;
+                document.getElementById("videoPlayer").style.display = "block";
+            } else {
+                alert("❌ Could not extract video. Try another link.");
+            }
+        })
+        .catch(error => {
+            console.error("❌ Proxy Fetch Error:", error);
+            alert("⚠️ Error fetching video. Check console for details.");
+        });
 }
 
-// Function to extract video URL from the HTML (Needs improvement)
+// Function to extract video URL from the HTML (Basic pattern matching)
 function extractVideoUrl(html) {
-    // Try to find a direct .mp4 URL in the HTML (may not always work)
+    // Try to find a direct .mp4 URL in the HTML (this may not always work)
     const match = html.match(/"videoUrl":"(https:\/\/[^"]+\.mp4)"/);
     return match ? match[1] : null;
 }
