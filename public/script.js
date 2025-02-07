@@ -1,41 +1,3 @@
-document.getElementById('playButton').addEventListener('click', function() {
-  const link = document.getElementById('teraboxLink').value;
-  const videoContainer = document.getElementById('videoContainer');
-
-  console.log("User input link:", link); // Debugging
-
-  if (link) {
-    const videoId = extractVideoId(link);
-    console.log("Extracted video ID:", videoId); // Debugging
-
-    if (videoId) {
-      const videoUrl = `https://terabox.com/video/${videoId}`; // This may need modification
-      console.log("Generated video URL:", videoUrl); // Debugging
-
-      const iframe = document.createElement('iframe');
-      iframe.src = videoUrl;
-      iframe.width = '100%';
-      iframe.height = '400';
-      iframe.frameBorder = '0';
-      iframe.allow = 'autoplay; encrypted-media';
-
-      videoContainer.innerHTML = ''; // Clear previous content
-      videoContainer.appendChild(iframe);
-    } else {
-      console.log("Invalid TeraBox link format.");
-      videoContainer.innerHTML = 'Invalid TeraBox link.';
-    }
-  } else {
-    console.log("No link entered.");
-    videoContainer.innerHTML = 'Please enter a TeraBox link.';
-  }
-});
-
-function isValidTeraBoxLink(url) {
-    const regex = /^https:\/\/(www\.)?(terabox|1024terabox)\.com\/s\/[a-zA-Z0-9_-]+$/;
-    return regex.test(url);
-}
-
 document.getElementById("playButton").addEventListener("click", function() {
     const linkInput = document.getElementById("teraboxLink").value;
 
@@ -45,4 +7,45 @@ document.getElementById("playButton").addEventListener("click", function() {
     }
 
     console.log("Valid TeraBox link:", linkInput);
+
+    // Attempt to fetch the video
+    fetchVideo(linkInput);
 });
+
+function fetchVideo(link) {
+    console.log("Fetching video for link:", link);
+
+    fetch(link)
+        .then(response => {
+            console.log("Response received:", response);
+            return response.text();
+        })
+        .then(html => {
+            console.log("HTML content:", html);
+
+            // Check if the page requires login
+            if (html.includes("Please log in")) {
+                alert("TeraBox requires login to access this file.");
+                return;
+            }
+
+            // Extract video URL (Needs correct parsing logic)
+            const videoUrl = extractVideoUrl(html);
+            if (videoUrl) {
+                console.log("Extracted video URL:", videoUrl);
+                document.getElementById("videoPlayer").src = videoUrl;
+            } else {
+                alert("Could not extract video. Try another link.");
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching video:", error);
+            alert("Error loading video. Check console for details.");
+        });
+}
+
+function extractVideoUrl(html) {
+    // This function needs proper logic to extract video URLs from TeraBox
+    const match = html.match(/"videoUrl":"(https:\/\/[^"]+)"/);
+    return match ? match[1] : null;
+}
