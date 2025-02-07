@@ -1,57 +1,77 @@
+// Constants
+const TERA_BOX_REGEX = /^https:\/\/(www\.)?(terabox|1024terabox)\.com\/s\/[a-zA-Z0-9_-]+$/;
+const LOGIN_REQUIRED_MESSAGES = ["Please log in", "Sign in to view"];
+const INVALID_LINK_MESSAGE = "Invalid TeraBox link! Please enter a correct link.";
+const ERROR_FETCHING_VIDEO_MESSAGE = "⚠️ Error loading video. Check the console for details.";
+const LOGIN_REQUIRED_ALERT = "⚠️ TeraBox requires login to access this file.";
+const VIDEO_EXTRACTION_ERROR = "❌ Could not extract video. Try another link.";
+
 // Function to validate TeraBox links
 function isValidTeraBoxLink(url) {
-    const regex = /^https:\/\/(www\.)?(terabox|1024terabox)\.com\/s\/[a-zA-Z0-9_-]+$/;
-    return regex.test(url);
+    return TERA_BOX_REGEX.test(url);
+}
+
+// Function to show alert messages
+function showAlert(message) {
+    alert(message);
+}
+
+// Function to set video player source
+function setVideoPlayerSource(videoUrl) {
+    const videoPlayer = document.getElementById("videoPlayer");
+    videoPlayer.src = videoUrl;
+    videoPlayer.style.display = "block"; // Show the video player
 }
 
 // When the "Play" button is clicked
-document.getElementById("playButton").addEventListener("click", function () {
+document.getElementById("playButton").addEventListener("click", async function () {
     const linkInput = document.getElementById("teraboxLink").value;
 
     // Validate the TeraBox link
     if (!isValidTeraBoxLink(linkInput)) {
-        alert("Invalid TeraBox link! Please enter a correct link.");
+        showAlert(INVALID_LINK_MESSAGE);
         return;
     }
 
     console.log("✅ Valid TeraBox link:", linkInput);
 
     // Fetch the video
-    fetchVideo(linkInput);
+    try {
+        await fetchVideo(linkInput);
+    } catch (error) {
+        console.error("❌ Error fetching video:", error);
+        showAlert(ERROR_FETCHING_VIDEO_MESSAGE);
+    }
 });
 
 // Function to fetch the video page
-function fetchVideo(link) {
+async function fetchVideo(link) {
     console.log("🔄 Fetching video for link:", link);
 
-    fetch(link)
-        .then(response => {
-            console.log("✅ Response received:", response);
-            return response.text();
-        })
-        .then(html => {
-            console.log("📜 HTML content fetched.");
+    try {
+        const response = await fetch(link);
+        console.log("✅ Response received:", response);
 
-            // Check if the page requires login
-            if (html.includes("Please log in") || html.includes("Sign in to view")) {
-                alert("⚠️ TeraBox requires login to access this file.");
-                return;
-            }
+        const html = await response.text();
+        console.log("📜 HTML content fetched.");
 
-            // Extract video URL (This part may need improvements)
-            const videoUrl = extractVideoUrl(html);
-            if (videoUrl) {
-                console.log("🎬 Extracted Video URL:", videoUrl);
-                document.getElementById("videoPlayer").src = videoUrl;
-                document.getElementById("videoPlayer").style.display = "block"; // Show the video player
-            } else {
-                alert("❌ Could not extract video. Try another link.");
-            }
-        })
-        .catch(error => {
-            console.error("❌ Error fetching video:", error);
-            alert("⚠️ Error loading video. Check the console for details.");
-        });
+        // Check if the page requires login
+        if (LOGIN_REQUIRED_MESSAGES.some(msg => html.includes(msg))) {
+            showAlert(LOGIN_REQUIRED_ALERT);
+            return;
+        }
+
+        // Extract video URL (This part may need improvements)
+        const videoUrl = extractVideoUrl(html);
+        if (videoUrl) {
+            console.log("🎬 Extracted Video URL:", videoUrl);
+            setVideoPlayerSource(videoUrl);
+        } else {
+            showAlert(VIDEO_EXTRACTION_ERROR);
+        }
+    } catch (error) {
+        throw new Error(error);
+    }
 }
 
 // Function to extract video URL from the HTML (Needs improvement)
