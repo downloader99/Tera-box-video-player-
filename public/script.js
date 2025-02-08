@@ -63,9 +63,22 @@ function fetchVideo(link) {
         });
 }
 
-// Function to extract video URL from the HTML (Basic pattern matching)
+// Improved function to extract video URL from the HTML
 function extractVideoUrl(html) {
-    // Try to find a direct .mp4 URL in the HTML (this may not always work)
-    const match = html.match(/"videoUrl":"(https:\/\/[^"]+\.mp4)"/);
-    return match ? match[1] : null;
-}
+    // Look for different patterns in the HTML where the video URL might be stored
+
+    // 1️⃣ Try to find a direct .mp4 URL
+    let match = html.match(/"videoUrl":"(https:\/\/[^"]+\.mp4)"/);
+    if (match) return match[1];
+
+    // 2️⃣ Try extracting from video player tags
+    match = html.match(/<video[^>]+src="([^"]+\.mp4)"/);
+    if (match) return match[1];
+
+    // 3️⃣ Try extracting from script tags where video might be embedded
+    match = html.match(/"play_url":"(https:\/\/[^"]+\.mp4)"/);
+    if (match) return match[1];
+
+    // ❌ If no video URL found, return null
+    return null;
+        }
