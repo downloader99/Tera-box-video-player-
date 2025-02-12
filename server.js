@@ -1,17 +1,32 @@
 const express = require('express');
-const path = require('path');
-
+const { chromium } = require('playwright');
 const app = express();
-const port = process.env.PORT || 3000;
+const port = 3000;
 
-// Serve static files from the "public" folder
-app.use(express.static(path.join(__dirname, 'public')));
+// Allow JSON requests
+app.use(express.json());
 
-// Start the server with error handling
-app.listen(port, (err) => {
-    if (err) {
-        console.error(`Failed to start server: ${err}`);
-    } else {
-        console.log(`Server running on port ${port}`);
-    }
+// Serve static files from the frontend (index.html, script.js, etc.)
+app.use(express.static('public'));
+
+// Route to fetch video URL from TeraBox or any other source
+app.get('/get-video', async (req, res) => {
+  const videoUrl = await getVideoUrl(req.query.url);
+  res.json({ videoUrl });
+});
+
+// Playwright function to scrape the video URL
+async function getVideoUrl(url) {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  await page.goto(url);
+  await page.waitForSelector('video'); // Adjust the selector as needed
+  const videoUrl = await page.evaluate(() => document.querySelector('video').src);
+  await browser.close();
+  return videoUrl;
+}
+
+// Start the Express server
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
 });
