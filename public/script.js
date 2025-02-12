@@ -1,16 +1,37 @@
-// Make sure this function is defined properly
 async function fetchVideo() {
-  const url = document.getElementById('urlInput').value;
+    try {
+        console.log("fetchVideo function called");
 
-  // Make a GET request to the backend to get the video URL
-  const response = await fetch(`/get-video?url=${encodeURIComponent(url)}`);
-  const data = await response.json();
+        // Get the input URL
+        let videoUrl = document.getElementById("videoUrl").value;
+        if (!videoUrl) {
+            alert("Please enter a valid video URL.");
+            return;
+        }
 
-  // Display the video URL
-  const videoContainer = document.getElementById('videoContainer');
-  if (data.videoUrl) {
-    videoContainer.innerHTML = `<video controls><source src="${data.videoUrl}" type="video/mp4"></video>`;
-  } else {
-    videoContainer.innerHTML = 'No video found.';
-  }
+        // Send a request to the server to fetch the video
+        let response = await fetch('/fetch-video', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ url: videoUrl })
+        });
+
+        let data = await response.json();
+
+        if (data.success) {
+            document.getElementById("videoPlayer").src = data.videoLink;
+        } else {
+            alert("Failed to fetch video. Please check the URL.");
+        }
+    } catch (error) {
+        console.error("Error fetching video:", error);
+        alert("An error occurred. Please try again.");
+    }
 }
+
+// Ensure the script runs after the page loads
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("fetchButton").addEventListener("click", fetchVideo);
+});
