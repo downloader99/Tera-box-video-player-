@@ -1,12 +1,16 @@
 {
-  "name": "terabox-video-player",
+  "name": "Tera-box-video-player",
   "version": "1.0.0",
-  "description": "A simple video player for TeraBox links",
+  "description": "A web app to scrape and play videos from TeraBox",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.18.2"
-  }
+    "express": "^4.17.1",
+    "playwright": "^1.20.0"
+  },
+  "devDependencies": {},
+  "author": "",
+  "license": "ISC"
 }
