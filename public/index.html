@@ -4,17 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TeraBox Video Player</title>
-  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="container">
-    <h1>TeraBox Video Player</h1>
-    <input type="text" id="teraboxLink" placeholder="Paste TeraBox link here" />
-    <button id="playButton">Play Video</button>
-    <div id="videoContainer">
-      <!-- Video player will appear here -->
-    </div>
-  </div>
+  <h1>Video Scraper</h1>
+  <input type="text" id="urlInput" placeholder="Enter TeraBox Video URL">
+  <button onclick="fetchVideo()">Get Video</button>
+  <div id="videoContainer"></div>
+
+  <!-- Ensure script.js is correctly linked -->
   <script src="script.js"></script>
 </body>
 </html>
