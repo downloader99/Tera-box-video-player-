@@ -35,11 +35,6 @@
             border: 1px solid #ccc;
             border-radius: 5px;
         }
-        #downloadLink {
-            display: none;
-            margin-top: 10px;
-            font-size: 16px;
-        }
     </style>
 </head>
 <body>
@@ -48,13 +43,12 @@
     <input type="text" id="videoUrl" placeholder="Enter TeraBox video URL">
     <button id="fetchButton">Fetch Video</button>
 
+    <p id="statusMessage"></p>
+
     <video id="videoPlayer" controls>
         <source id="videoSource" src="" type="video/mp4">
         Your browser does not support the video tag.
     </video>
-
-    <br>
-    <a id="downloadLink" href="#" download>Download Video</a>
 
     <script src="script.js"></script>
 </body>
