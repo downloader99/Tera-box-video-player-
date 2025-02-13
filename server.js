@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+        HEAD
 const express = require('express');
 const puppeteer = require('puppeteer');
 const cors = require('cors');
@@ -38,7 +38,7 @@ app.post('/fetch-video', async (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
-=======
+       
 const express = require("express");
 const puppeteer = require('puppeteer');
 const cors = require("cors");
@@ -104,5 +104,5 @@ app.get("/", (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
->>>>>>> 8dc2f75 (Updated server and client code, modified package files)
+        8dc2f75 (Updated server and client code, modified package files)
 });
