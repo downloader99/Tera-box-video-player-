@@ -1,29 +1,43 @@
-async function fetchVideo() {
-    const url = document.getElementById("videoUrl").value;
-    if (!url) {
-        alert("Please enter a URL.");
-        return;
-    }
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("Script loaded");
 
-    try {
-        let response = await fetch("/fetch-video", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url: url }),
-        });
+    const fetchButton = document.getElementById("fetchButton");
+    const videoUrlInput = document.getElementById("videoUrl");
+    const videoPlayer = document.getElementById("videoPlayer");
+    const videoSource = document.getElementById("videoSource");
+    const statusMessage = document.getElementById("statusMessage");
 
-        let data = await response.json();
-        console.log("Response:", data); // Check if response is correct
-
-        if (data.url) {
-            document.getElementById("videoFrame").src = data.url; // Update video player
-            document.getElementById("downloadLink").href = data.url; // Set download link
-            document.getElementById("downloadLink").style.display = "block";
-        } else {
-            alert("Failed to fetch video.");
+    fetchButton.addEventListener("click", async function () {
+        const url = videoUrlInput.value.trim();
+        if (!url) {
+            statusMessage.textContent = "Please enter a TeraBox URL.";
+            return;
         }
-    } catch (error) {
-        console.error("Error fetching video:", error);
-        alert("Failed to fetch video. Please check URL.");
-    }
-}
+
+        statusMessage.textContent = "Fetching video...";
+
+        try {
+            const response = await fetch("https://tera-box-video-player-1.onrender.com/fetch-video", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ url }),
+            });
+
+            const data = await response.json();
+            console.log("Response Data:", data);
+
+            if (response.ok && data.url) {
+                videoSource.src = data.url;
+                videoPlayer.load();
+                statusMessage.textContent = "Video fetched successfully!";
+            } else {
+                statusMessage.textContent = "Failed to fetch video. Please check the URL.";
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            statusMessage.textContent = "Error fetching video.";
+        }
+    });
+});
