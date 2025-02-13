@@ -1,31 +1,40 @@
 const express = require('express');
+const puppeteer = require('puppeteer');
+const cors = require('cors');
 const app = express();
-const path = require('path');
+const port = process.env.PORT || 3000;
 
-app.use(express.json()); // Middleware to parse JSON request bodies
+app.use(cors());
+app.use(express.json());
 
-// Serve static files from the public folder
-app.use(express.static(path.join(__dirname, 'public')));
+app.post('/fetch-video', async (req, res) => {
+    const { url } = req.body;
 
-// Handle the POST request to /fetch-video
-app.post('/fetch-video', (req, res) => {
-  const { url } = req.body;
+    try {
+        const browser = await puppeteer.launch({ headless: true });
+        const page = await browser.newPage();
+        await page.goto(url, { waitUntil: 'domcontentloaded' });
 
-  if (!url) {
-    return res.status(400).json({ error: 'URL is required' });
-  }
+        // Your scraping logic here (adjust based on the TeraBox video page structure)
+        const videoUrl = await page.evaluate(() => {
+            // Find the video URL from the page
+            const videoElement = document.querySelector('video'); 
+            return videoElement ? videoElement.src : null;
+        });
 
-  // Here you can add your logic for video fetching or scraping
+        await browser.close();
 
-  // For now, just return the URL as a response
-  res.json({ message: 'Video fetched successfully', url });
+        if (videoUrl) {
+            res.json({ message: 'Video fetched successfully', url: videoUrl });
+        } else {
+            res.status(404).json({ message: 'Video not found' });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error fetching video' });
+    }
 });
 
-// If you want to serve an index page or handle the root route
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.listen(3000, () => {
-  console.log('Server running on http://localhost:3000');
+app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
 });
