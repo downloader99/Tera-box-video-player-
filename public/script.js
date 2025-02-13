@@ -1,43 +1,35 @@
-document.addEventListener("DOMContentLoaded", function () {
-    console.log("Script loaded");
+document.getElementById("fetchButton").addEventListener("click", async () => {
+    console.log("Fetch button clicked!");  // Debug log
 
-    const fetchButton = document.getElementById("fetchButton");
-    const videoUrlInput = document.getElementById("videoUrl");
-    const videoPlayer = document.getElementById("videoPlayer");
-    const videoSource = document.getElementById("videoSource");
-    const statusMessage = document.getElementById("statusMessage");
+    const videoUrl = document.getElementById("videoUrl").value;
+    if (!videoUrl) {
+        console.log("No URL entered!");
+        return;
+    }
 
-    fetchButton.addEventListener("click", async function () {
-        const url = videoUrlInput.value.trim();
-        if (!url) {
-            statusMessage.textContent = "Please enter a TeraBox URL.";
-            return;
+    console.log("Sending request to server...");
+
+    try {
+        const response = await fetch("/fetch-video", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ url: videoUrl })
+        });
+
+        console.log("Response received!", response);
+
+        const data = await response.json();
+        console.log("Response Data:", data);
+
+        if (data.url) {
+            document.getElementById("videoPlayer").src = data.url;
+            console.log("Video URL set:", data.url);
+        } else {
+            console.log("No video URL received from server!");
         }
-
-        statusMessage.textContent = "Fetching video...";
-
-        try {
-            const response = await fetch("https://tera-box-video-player-1.onrender.com/fetch-video", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ url }),
-            });
-
-            const data = await response.json();
-            console.log("Response Data:", data);
-
-            if (response.ok && data.url) {
-                videoSource.src = data.url;
-                videoPlayer.load();
-                statusMessage.textContent = "Video fetched successfully!";
-            } else {
-                statusMessage.textContent = "Failed to fetch video. Please check the URL.";
-            }
-        } catch (error) {
-            console.error("Error:", error);
-            statusMessage.textContent = "Error fetching video.";
-        }
-    });
+    } catch (error) {
+        console.error("Error fetching video:", error);
+    }
 });
