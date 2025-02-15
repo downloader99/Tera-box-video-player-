@@ -3,52 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TeraBox Video Player</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 20px;
-        }
-        input {
-            width: 80%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #218838;
-        }
-        video {
-            margin-top: 20px;
-            width: 80%;
-            max-width: 720px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-    </style>
+    <title>TeraBox Video Fetcher</title>
 </head>
 <body>
-    <h1>TeraBox Video Player</h1>
-    
-    <input type="text" id="videoUrl" placeholder="Enter TeraBox video URL">
-    <button id="fetchButton">Fetch Video</button>
-
-    <p id="statusMessage"></p>
-
-    <video id="videoPlayer" controls>
-        <source id="videoSource" src="" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
+    <h1>TeraBox Video Fetcher</h1>
+    <input type="text" id="linkInput" placeholder="Enter TeraBox Link">
+    <button onclick="fetchVideo()">Fetch Video</button>
+    <p id="result"></p>
 
     <script src="script.js"></script>
 </body>

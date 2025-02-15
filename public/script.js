@@ -1,35 +1,22 @@
-document.getElementById("fetchButton").addEventListener("click", async () => {
-    console.log("Fetch button clicked!");  // Debug log
-
-    const videoUrl = document.getElementById("videoUrl").value;
-    if (!videoUrl) {
-        console.log("No URL entered!");
-        return;
-    }
-
-    console.log("Sending request to server...");
+async function fetchVideo() {
+    const link = document.getElementById("linkInput").value;
+    const result = document.getElementById("result");
+    result.textContent = "Fetching video...";
 
     try {
         const response = await fetch("/fetch-video", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ url: videoUrl })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ teraBoxLink: link })
         });
 
-        console.log("Response received!", response);
-
         const data = await response.json();
-        console.log("Response Data:", data);
-
-        if (data.url) {
-            document.getElementById("videoPlayer").src = data.url;
-            console.log("Video URL set:", data.url);
+        if (data.videoUrl) {
+            result.innerHTML = `Video URL: <a href="${data.videoUrl}" target="_blank">${data.videoUrl}</a>`;
         } else {
-            console.log("No video URL received from server!");
+            result.textContent = "Failed to fetch video.";
         }
     } catch (error) {
-        console.error("Error fetching video:", error);
+        result.textContent = "Error fetching video.";
     }
-});
+}
