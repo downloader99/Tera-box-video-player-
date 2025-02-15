@@ -1,31 +1,60 @@
+const express = require('express');
 const playwright = require('playwright');
 
-(async () => {
-    console.log("Launching browser...");
+const app = express();
+const PORT = 3000;
 
-    // Launch browser in headless mode
-    const browser = await playwright.chromium.launch({ headless: true });
-    const context = await browser.newContext({
-        userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        javaScriptEnabled: true
-    });
+app.use(express.json());
 
-    const page = await context.newPage();
-    const teraBoxLink = "https://1024terabox.com/s/17aWZGCfn62KrXNBIfzJEeQ"; // Replace with a valid TeraBox link
+// Root Route (To Fix "Cannot GET /")
+app.get('/', (req, res) => {
+    res.send("TeraBox Video Fetcher API is running!");
+});
 
-    console.log("Navigating to TeraBox...");
-    try {
-        await page.goto(teraBoxLink, { waitUntil: 'load', timeout: 90000 }); // Increased timeout to 90s
-        console.log("Page loaded successfully.");
-    } catch (error) {
-        console.error("Error loading page:", error);
-        await browser.close();
-        return;
+// Fetch Video Route
+app.post('/fetch-video', async (req, res) => {
+    const { teraBoxLink } = req.body;
+    if (!teraBoxLink) {
+        return res.status(400).json({ error: "No TeraBox link provided" });
     }
 
-    // Extract body content
-    const pageContent = await page.content();
-    console.log("Page Content:", pageContent);
+    console.log("Launching browser...");
+    const browser = await playwright.chromium.launch({ headless: true });
 
-    await browser.close();
-})();
+    try {
+        const context = await browser.newContext({
+            userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            javaScriptEnabled: true
+        });
+
+        const page = await context.newPage();
+        console.log("Navigating to TeraBox...");
+        await page.goto(teraBoxLink, { waitUntil: 'load', timeout: 90000 });
+
+        console.log("Waiting for video element...");
+        await page.waitForSelector('video', { timeout: 60000 });
+
+        // Extracting video URL
+        const videoUrl = await page.evaluate(() => {
+            const videoElement = document.querySelector('video');
+            return videoElement ? videoElement.src : null;
+        });
+
+        if (videoUrl) {
+            console.log("Direct Video URL Found:", videoUrl);
+            res.json({ videoUrl });
+        } else {
+            console.log("Failed to extract video URL");
+            res.status(500).json({ error: "Failed to extract video URL" });
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        res.status(500).json({ error: error.message });
+    } finally {
+        await browser.close();
+    }
+});
+
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+});
