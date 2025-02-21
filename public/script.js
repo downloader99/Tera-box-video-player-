@@ -1,22 +1,39 @@
-async function fetchVideo() {
-    const link = document.getElementById("linkInput").value;
-    const result = document.getElementById("result");
-    result.textContent = "Fetching video...";
+document.getElementById('fetchButton').addEventListener('click', async () => {
+    const linkInput = document.getElementById('linkInput').value.trim();
+    const loadingText = document.getElementById('loading');
+    const errorMessage = document.getElementById('errorMessage');
+    const videoPlayer = document.getElementById('videoPlayer');
+
+    if (!linkInput) {
+        errorMessage.textContent = "Please enter a TeraBox link.";
+        return;
+    }
+
+    // Reset UI
+    errorMessage.textContent = "";
+    videoPlayer.style.display = "none";
+    videoPlayer.src = "";
+    loadingText.style.display = "block";
 
     try {
-        const response = await fetch("/fetch-video", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ teraBoxLink: link })
+        const response = await fetch('http://localhost:3000/fetch-video', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ teraBoxLink: linkInput })
         });
 
         const data = await response.json();
+        loadingText.style.display = "none";
+
         if (data.videoUrl) {
-            result.innerHTML = `Video URL: <a href="${data.videoUrl}" target="_blank">${data.videoUrl}</a>`;
+            videoPlayer.src = data.videoUrl;
+            videoPlayer.style.display = "block";
         } else {
-            result.textContent = "Failed to fetch video.";
+            errorMessage.textContent = "Failed to extract video.";
         }
     } catch (error) {
-        result.textContent = "Error fetching video.";
+        loadingText.style.display = "none";
+        errorMessage.textContent = "Error fetching video.";
+        console.error("Fetch error:", error);
     }
-}
+});

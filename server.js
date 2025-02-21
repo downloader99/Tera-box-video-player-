@@ -1,21 +1,20 @@
 const express = require('express');
 const { chromium } = require('playwright');
-const path = require('path');
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public'))); // Serve frontend files
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html')); // Serve frontend
+    res.send("✅ TeraBox Video Fetcher API is running! Use POST or GET /fetch-video");
 });
 
-app.post('/fetch-video', async (req, res) => {
-    const { teraBoxLink } = req.body;
+app.all('/fetch-video', async (req, res) => {
+    const teraBoxLink = req.method === "POST" ? req.body.teraBoxLink : req.query.teraBoxLink;
+    
     if (!teraBoxLink) {
-        return res.status(400).json({ error: "Missing TeraBox link" });
+        return res.status(400).json({ error: "Missing TeraBox link. Use 'teraBoxLink' in body (POST) or query (GET)" });
     }
 
     console.log("Launching browser...");
@@ -28,11 +27,13 @@ app.post('/fetch-video', async (req, res) => {
     const page = await context.newPage();
     let videoUrl = null;
 
-    // Listen for video requests
+    // Listen for network requests
     page.on('response', async (response) => {
         const url = response.url();
-        if (url.includes('.m3u8') || url.includes('.mp4')) {
-            console.log("Possible video URL found:", url);
+        
+        // Ensure it's a video link
+        if (url.match(/\.(mp4|m3u8|ts)(\?|$)/)) {
+            console.log("✅ Valid Video URL Found:", url);
             videoUrl = url;
         }
     });
@@ -40,10 +41,10 @@ app.post('/fetch-video', async (req, res) => {
     console.log("Navigating to:", teraBoxLink);
     try {
         await page.goto(teraBoxLink, { waitUntil: 'networkidle', timeout: 90000 });
-        console.log("Page loaded successfully.");
+        console.log("✅ Page loaded successfully.");
         await page.waitForTimeout(10000); // Wait for network requests
     } catch (error) {
-        console.error("Error loading page:", error);
+        console.error("❌ Error loading page:", error);
         await browser.close();
         return res.status(500).json({ error: "Failed to load TeraBox page" });
     }
@@ -58,5 +59,5 @@ app.post('/fetch-video', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`TeraBox Video Fetcher API is running on http://localhost:${PORT}`);
+    console.log(`🚀 TeraBox Video Fetcher API is running on http://localhost:${PORT}`);
 });
