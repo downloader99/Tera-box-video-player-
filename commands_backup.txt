@@ -50,3 +50,24 @@
    50  git commit -m "Backup commit"
    51  git push origin main
    52  history > commands_backup.txt
+   53  dpkg --get-selections > installed_packages.txt
+   54  ls
+   55  node server.js
+   56  node test.js
+   57  node your-script.js
+   58  nano your-script.js
+   59  git add .
+   60  git commit -m "Backup commit"
+   61  git push origin main
+   62  git add .
+   63  git commit -m "Backup commit"
+   64  git push origin main
+   65  downloader99
+   66  git add .
+   67  git commit -m "Backup commit"
+   68  git push origin main
+   69  git add .
+   70  git commit -m "Backup commit"
+   71  git push origin main
+   72  rclone copy ~/backup remote:MyUbuntuBackup
+   73  history > commands_backup.txt
