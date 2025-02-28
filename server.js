@@ -1,5 +1,6 @@
 const express = require('express');
-const { chromium } = require('playwright');
+const { chromium } = require('playwright-extra');
+const stealth = require('puppeteer-extra-plugin-stealth')();
 
 const app = express();
 const PORT = 3000;
@@ -27,22 +28,22 @@ app.all('/fetch-video', async (req, res) => {
     const page = await context.newPage();
     let videoUrl = null;
 
-    // Listen for network requests
+    // Listen for network requests & log all URLs
     page.on('response', async (response) => {
         const url = response.url();
-        
-        // Ensure it's a video link
+        console.log("Network Request:", url); // Log all requests
+
         if (url.match(/\.(mp4|m3u8|ts)(\?|$)/)) {
-            console.log("✅ Valid Video URL Found:", url);
+            console.log("✅ Found Video URL:", url);
             videoUrl = url;
         }
     });
 
     console.log("Navigating to:", teraBoxLink);
     try {
-        await page.goto(teraBoxLink, { waitUntil: 'networkidle', timeout: 90000 });
+        await page.goto(teraBoxLink, { waitUntil: 'domcontentloaded', timeout: 120000 });
         console.log("✅ Page loaded successfully.");
-        await page.waitForTimeout(10000); // Wait for network requests
+        await page.waitForTimeout(30000); // Increased wait time
     } catch (error) {
         console.error("❌ Error loading page:", error);
         await browser.close();
@@ -54,10 +55,11 @@ app.all('/fetch-video', async (req, res) => {
     if (videoUrl) {
         return res.json({ videoUrl });
     } else {
-        return res.status(500).json({ error: "Failed to extract video URL" });
+        return res.status(500).json({ error: "Failed to extract video URL. Check logs for possible URLs." });
     }
 });
 
 app.listen(PORT, () => {
     console.log(`🚀 TeraBox Video Fetcher API is running on http://localhost:${PORT}`);
 });
+
