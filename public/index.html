@@ -3,49 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TeraBox Video Player</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 20px;
+    <title>TeraBox Video Extractor</title>
+    <script>
+        async function extractVideo() {
+            const url = document.getElementById("urlInput").value;
+            if (!url) {
+                alert("Please enter a TeraBox link!");
+                return;
+            }
+
+            try {
+                const response = await fetch("/extract", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ url })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById("videoPlayer").src = data.videoUrl;
+                    document.getElementById("downloadBtn").href = data.videoUrl;
+                    document.getElementById("videoContainer").style.display = "block";
+                } else {
+                    alert("Failed to extract video. Try again.");
+                }
+            } catch (error) {
+                console.error("Error extracting video:", error);
+                alert("An error occurred. Check console for details.");
+            }
         }
-        input {
-            width: 80%;
-            padding: 10px;
-            margin: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:disabled {
-            background-color: #ccc;
-        }
-        #loading {
-            display: none;
-            margin: 10px;
-            font-size: 16px;
-            color: #555;
-        }
-        video {
-            width: 90%;
-            margin-top: 20px;
-            display: none;
-        }
-    </style>
+    </script>
 </head>
 <body>
-    <h2>TeraBox Video Player</h2>
-    <input type="text" id="linkInput" placeholder="Enter TeraBox link">
-    <button id="fetchButton">Fetch Video</button>
-    <p id="loading">Fetching video...</p>
-    <p id="errorMessage" style="color: red;"></p>
-    <video id="videoPlayer" controls></video>
-    
-    <script src="script.js"></script>
+    <h1>TeraBox Video Extractor</h1>
+    <input type="text" id="urlInput" placeholder="Paste TeraBox Link Here">
+    <button onclick="extractVideo()">Extract</button>
+
+    <div id="videoContainer" style="display:none;">
+        <h2>Extracted Video</h2>
+        <video id="videoPlayer" controls></video>
+        <br>
+        <a id="downloadBtn" download>Download Video</a>
+    </div>
 </body>
 </html>
+

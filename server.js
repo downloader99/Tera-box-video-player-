@@ -1,64 +1,55 @@
-const express = require('express');
-const { chromium } = require('playwright-extra');
-const stealth = require('puppeteer-extra-plugin-stealth')();
+const express = require("express");
+const puppeteer = require("puppeteer-extra");
+const StealthPlugin = require("puppeteer-extra-plugin-stealth");
+const path = require("path");
 
-chromium.use(stealth);  // Apply stealth plugin
+puppeteer.use(StealthPlugin());
 
 const app = express();
 const PORT = 3000;
 
+app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 
-app.get('/', (req, res) => {
-    res.send("✅ TeraBox Video Fetcher API is running! Use POST or GET /fetch-video");
-});
+app.post("/extract", async (req, res) => {
+    const { url } = req.body;
 
-app.all('/fetch-video', async (req, res) => {
-    const teraBoxLink = req.method === "POST" ? req.body.teraBoxLink : req.query.teraBoxLink;
-
-    if (!teraBoxLink) {
-        return res.status(400).json({ error: "Missing TeraBox link. Use 'teraBoxLink' in body (POST) or query (GET)" });
+    if (!url) {
+        return res.status(400).json({ error: "No URL provided" });
     }
 
-    console.log("🚀 Launching Playwright...");
-    const browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext({
-        userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        javaScriptEnabled: true
-    });
-
-    const page = await context.newPage();
-    let videoUrl = null;
-
-    // Capture all network requests
-    page.on('response', async (response) => {
-        const url = response.url();
-        console.log("📡 Network Request:", url);
-
-        if (url.match(/\.(mp4|m3u8|ts)(\?|$)/)) {  // Check for video files
-            console.log("✅ Video URL Found:", url);
-            videoUrl = url;
-        }
-    });
-
-    console.log("🌐 Navigating to:", teraBoxLink);
     try {
-        await page.goto(teraBoxLink, { waitUntil: 'networkidle', timeout: 90000 });
-        console.log("✅ Page loaded successfully.");
-        await page.waitForTimeout(15000);  // Allow extra time for video requests
-    } catch (error) {
-        console.error("❌ Error loading page:", error);
+        const browser = await puppeteer.launch({
+            headless: true,
+            args: ["--no-sandbox", "--disable-setuid-sandbox"]
+        });
+
+        const page = await browser.newPage();
+        await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
+
+        // Log page content for debugging
+        console.log(await page.content());
+
+        // Extract video URL (modify selector based on TeraBox page structure)
+        const videoSrc = await page.evaluate(() => {
+            let videoElement = document.querySelector("video"); // Adjust selector if necessary
+            return videoElement ? videoElement.src : null;
+        });
+
         await browser.close();
-        return res.status(500).json({ error: "Failed to load TeraBox page" });
+
+        if (!videoSrc) {
+            return res.status(500).json({ error: "Failed to extract video URL" });
+        }
+
+        res.json({ success: true, videoUrl: videoSrc });
+    } catch (error) {
+        console.error("Extraction failed:", error);
+        res.status(500).json({ error: "Failed to extract video" });
     }
-
-    await browser.close();
-
-    console.log("📤 Sending Response:", videoUrl ? videoUrl : "No video URL found");
-    return res.json({ videoUrl: videoUrl || "No video URL found" });
 });
 
 app.listen(PORT, () => {
-    console.log(`🚀 TeraBox Video Fetcher API is running on http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
 });
 
